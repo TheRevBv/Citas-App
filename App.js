@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 import {
   SafeAreaView,
   StyleSheet,
@@ -6,38 +6,57 @@ import {
   Pressable,
   View,
   FlatList,
+  Alert,
 } from 'react-native';
-import ActionButton from 'react-native-action-button';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Formulario from './src/components/ModalFormulario';
+// import ActionButton from 'react-native-action-button';
+// import Icon from 'react-native-vector-icons/Ionicons';
+import ModalFormulario from './src/components/ModalFormulario';
 import Paciente from './src/components/Paciente';
-import {LogBox} from 'react-native';
+// import {LogBox} from 'react-native';
 
 const App = () => {
-  useEffect(() => {
-    LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
-  }, []);
-
   //Los Hooks son funciones que nos permiten crear estados y funciones
   //en una sola linea de codigo
   // const [clientes, setClientes] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [pacientes, setPacientes] = useState([]);
+  const [paciente, setPaciente] = useState({});
 
+  const pacienteEditar = id => {
+    const pacient = pacientes.filter(paciente => paciente.id === id);
+    setPaciente(pacient[0]);
+  };
+  const pacienteEliminar = id => {
+    console.log('Eliminando... ', id);
+    Alert.alert(
+      'Deseas eliminar esta cita de la lista?',
+      'Una cita eliminada no se puede recuperar necesita agregarla de nuevo',
+      [
+        {text: 'No'},
+        {
+          text: 'Si, Eliminar',
+          onPress: () => {
+            const nuevosPacientes = pacientes.filter(
+              pacienteState => pacienteState.id !== id,
+            );
+            console.log(nuevosPacientes);
+            setPacientes(nuevosPacientes);
+          },
+        },
+      ],
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.titulo}>
         Administrador de citas - {''}
         <Text style={styles.tituloBold}>Veterinaria</Text>
       </Text>
-      <ActionButton
-        // style={styles.btnNuevaCita}
-        buttonColor="#6D28D9"
-        onPress={() => setModalVisible(!modalVisible)}>
-        <Icon name="md-add" size={30} color="white" />
-      </ActionButton>
-      {/* <Text style={styles.btnTextoNuevaCita}>Nueva cita</Text> */}
-      {/* </Pressable> */}
+      <Pressable
+        onPress={() => setModalVisible(!modalVisible)}
+        style={styles.btnNuevaCita}>
+        <Text style={styles.btnTextoNuevaCita}>Nueva cita</Text>
+      </Pressable>
       {pacientes.length === 0 ? (
         <Text style={styles.noPacientes}>No hay pacientes aún</Text>
       ) : (
@@ -46,15 +65,25 @@ const App = () => {
           data={pacientes}
           keyExtractor={item => item.id}
           renderItem={({item}) => {
-            return <Paciente item={item} />;
+            // console.log(item);
+            return (
+              <Paciente
+                item={item}
+                setModalVisible={setModalVisible}
+                pacienteEditar={pacienteEditar}
+                pacienteEliminar={pacienteEliminar}
+              />
+            );
           }}
         />
       )}
-      <Formulario
+      <ModalFormulario
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
         pacientes={pacientes}
         setPacientes={setPacientes}
+        paciente={paciente}
+        setPaciente={setPaciente}
       />
     </SafeAreaView>
   );
@@ -84,11 +113,11 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   btnNuevaCita: {
-    // marginTop: 20,
-    // marginHorizontal: 30,
-    // backgroundColor: '#6D28D9',
-    // borderRadius: 10,
-    // padding: 15,
+    marginTop: 20,
+    marginHorizontal: 30,
+    backgroundColor: '#6D28D9',
+    borderRadius: 10,
+    padding: 15,
   },
   noPacientes: {
     textAlign: 'center',
@@ -104,3 +133,18 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+
+{
+  /* <ActionButton
+        // style={styles.btnNuevaCita}
+        buttonColor="#6D28D9"
+        renderIcon={() => <Icon name="add-outline" size={20} color="#FFF" />}
+        onPress={() => setModalVisible(!modalVisible)}
+      /> */
+}
+{
+  /* <Icon name="md-add" size={30} color="white" /> */
+}
+{
+  /* </ActionButton> */
+}

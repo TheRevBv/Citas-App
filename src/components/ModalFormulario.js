@@ -1,4 +1,4 @@
-import React, {useState, useEffects} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Modal,
   Text,
@@ -13,18 +13,33 @@ import {
 
 import DatePicker from 'react-native-date-picker';
 
-const Formulario = ({
+const ModalFormulario = ({
   modalVisible,
   setModalVisible,
   setPacientes,
   pacientes,
+  paciente: pacienteObj,
+  setPaciente: setPacienteApp,
 }) => {
+  const [id, setId] = useState('');
   const [paciente, setPaciente] = useState('');
   const [propietario, setPropietario] = useState('');
   const [telefono, setTelefono] = useState('');
   const [email, setEmail] = useState('');
   const [fecha, setFecha] = useState(new Date());
   const [sintomas, setSintomas] = useState('');
+
+  useEffect(() => {
+    if (Object.keys(pacienteObj).length > 0) {
+      setId(pacienteObj.id);
+      setPaciente(pacienteObj.paciente);
+      setPropietario(pacienteObj.propietario);
+      setEmail(pacienteObj.email);
+      setTelefono(pacienteObj.telefono);
+      setSintomas(pacienteObj.sintomas);
+      setFecha(pacienteObj.fecha);
+    }
+  }, [pacienteObj]); //aqui podria ir el pacienteObj en el array
 
   const handleCita = () => {
     //Validar
@@ -34,9 +49,11 @@ const Formulario = ({
       Alert.alert('Error', 'Todos los campos son obligatorios');
       return;
     }
+
+    //Guardar
     const nuevoPaciente = {
       // id: Math.random(),
-      id: Date.now(),
+      // id: Date.now(),
       paciente,
       propietario,
       telefono,
@@ -44,17 +61,29 @@ const Formulario = ({
       fecha,
       sintomas,
     };
-    // console.log(nuevoPaciente);
-    setPacientes([...pacientes, nuevoPaciente]);
-    console.log(pacientes); //Imprime el arreglo
+
+    if (id) {
+      console.log('Editando... ', id);
+      nuevoPaciente.id = id;
+      const pacientesActualizados = pacientes.map(pacienteState =>
+        pacienteState.id === nuevoPaciente.id ? nuevoPaciente : pacienteState,
+      );
+      setPacientes(pacientesActualizados);
+      setPacienteApp({});
+    } else {
+      console.log('Agregando...');
+      nuevoPaciente.id = Date.now();
+      setPacientes([...pacientes, nuevoPaciente]);
+    }
+
     setModalVisible(!modalVisible);
+    setId('');
     setEmail('');
     setFecha(new Date());
     setPropietario('');
     setSintomas('');
     setTelefono('');
     setPaciente('');
-
     //Guardar en localStorage
     // localStorage.setItem('pacientes', JSON.stringify(pacientes));
   };
@@ -64,11 +93,22 @@ const Formulario = ({
       <SafeAreaView style={styles.container}>
         <ScrollView>
           <Text style={styles.titulo}>
-            Nueva <Text style={styles.tituloBold}>Cita</Text>
+            {pacienteObj.id ? 'Editar' : 'Nueva'}{' '}
+            <Text style={styles.tituloBold}>Cita</Text>
           </Text>
           <Pressable
             style={styles.btnCancelar}
-            onLongPress={() => setModalVisible(!modalVisible)}>
+            onPress={() => {
+              setModalVisible(!modalVisible);
+              setPacienteApp({});
+              setId('');
+              setEmail('');
+              setFecha(new Date());
+              setPropietario('');
+              setSintomas('');
+              setTelefono('');
+              setPaciente('');
+            }}>
             <Text style={styles.btnCancelarTexto}>Cancelar</Text>
           </Pressable>
           <View style={styles.formulario}>
@@ -137,7 +177,9 @@ const Formulario = ({
             />
           </View>
           <Pressable style={styles.btnAgregar} onPress={handleCita}>
-            <Text style={styles.btnAgregarTexto}>Agregar</Text>
+            <Text style={styles.btnAgregarTexto}>
+              {pacienteObj.id ? 'Editar' : 'Agregar'} Paciente
+            </Text>
           </Pressable>
           {/* <View style={{flex: 1, backgroundColor: '#f3f3f3'}}>
             <ActionButton buttonColor="rgba(231,76,60,1)">
@@ -193,6 +235,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#fff',
+    color: '#000',
     padding: 15,
     borderRadius: 10,
   },
@@ -229,4 +272,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Formulario;
+export default ModalFormulario;
